@@ -1,0 +1,70 @@
+package ${packageName}.facade;
+
+import ${resultPackage}.dto.${resultDTO};
+import ${packageName}.dto.${ClassName}PageDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.service.${ClassName}Service;
+
+@Component
+public class ${ClassName}Facade {
+    @Autowired
+    private ${ClassName}Service ${classname}Service;
+    
+    public ${resultDTO} insert(${ClassName} obj){
+        try {
+            ${classname}Service.insert(obj);
+            return ${resultDTO}.putSuccess();
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+
+    public ${resultDTO} updateById(${ClassName} obj){
+        try {
+            ${classname}Service.updateById(obj);
+            return ${resultDTO}.putSuccess();
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+
+    public ${resultDTO} deleteById(${idType} ${idName}){
+        try {
+            ${classname}Service.deleteById(id);
+            return ${resultDTO}.putSuccess();
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+
+    public ${resultDTO} selectOne(${ClassName} obj){
+        try {
+            return ${resultDTO}.putSuccess(${classname}Service.selectOne(obj));
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+    public ${resultDTO} selectAll(${ClassName} obj){
+        try {
+            return ${resultDTO}.putSuccess(${classname}Service.selectAll(obj));
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+
+    public ${resultDTO} paging(${ClassName}PageDTO dto){
+        try {
+            return ${resultDTO}.putSuccess(${classname}Service.paging(dto));
+        }catch(Exception e){
+            e.printStackTrace();
+            return ${resultDTO}.put500(e.getMessage());
+        }
+    }
+}

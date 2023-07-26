@@ -1,0 +1,342 @@
+<template>
+<div>
+  <div class="query-box">
+    <div class="query-items">
+      #foreach ($column in $columns)
+        #if(!$column.pk && $column.propertyName != 'createTime' && $column.propertyName != 'updateTime' && $column.propertyName != 'version' &&
+          $column.propertyName.indexOf('Url')==-1 && $column.propertyName.indexOf('url')==-1 && $column.propertyName.indexOf('logo')==-1)
+          <div class="query-item">
+            <div class="query-label">$column.comment.split(' ')[0]：</div>
+            #if($column.javaType.name == 'Date')
+              <el-date-picker
+                      v-model="page.$column.propertyName"
+                      type="datetime"
+                      placeholder="请选择$column.comment.split(' ')[0]">
+              </el-date-picker>
+            #elseif($column.propertyName.indexOf('Time')!=-1)
+              <el-date-picker
+                      v-model="page.$column.propertyName"
+                      type="datetime"
+                      value-format="timestamp"
+                      placeholder="请选择$column.comment.split(' ')[0]">
+              </el-date-picker>
+            #elseif($column.propertyName.indexOf('Id')!=-1) ##代表有外键
+              <el-select v-model="page.$column.propertyName" filterable placeholder="请选择$column.comment.split(' ')[0]">
+                <el-option
+                        v-for="item in $column.propertyName.split('Id')[0]List"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id"
+                >
+                </el-option>
+              </el-select>
+            #elseif($column.comment.indexOf(' ')!=-1 && $column.comment.indexOf('-')!=-1) ##代表有对应的常量值
+              <el-radio-group v-model="page.$column.propertyName">
+                #foreach ($item in $column.comment.split(' '))
+                  #if($item.indexOf('-1-')!=-1)
+                    <el-radio-button :label="-1">$item.split('-1-')[1]</el-radio-button>
+                  #elseif($item.indexOf('1-')!=-1)
+                    <el-radio-button :label="1">$item.split('1-')[1]</el-radio-button>
+                  #elseif($item.indexOf('-')!=-1)
+                    <el-radio-button :label="$item.split('-')[0]">$item.split('-')[1]</el-radio-button>
+                  #end
+                #end
+              </el-radio-group>
+            #elseif($column.dbType == 'text')
+              <el-input type="textarea" v-model="page.$column.propertyName" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+            #elseif($column.javaType.name == 'String')
+              <el-input v-model="page.$column.propertyName" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+            #elseif($column.javaType.name == 'Long' || $column.javaType.name ==
+              'Integer'||$column.javaType.name == 'BigDecimal')
+              <el-input v-model="page.$column.propertyName" type="number" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+            #end
+          </div>
+        #end
+      #end
+    </div>
+    <div class="query-btns">
+      <el-button type="primary" @click="query">查询</el-button>
+      <el-button type="primary" @click="reset">重置</el-button>
+      <el-button type="primary" @click="open">添加$tableComment</el-button>
+    </div>
+  </div>
+  <div class="main">
+    <el-table :data="data" border style="width: 100%">
+      <el-table-column prop="id" label="编号" width="50"/>
+      #foreach ($column in $columns)
+        #if(${column.propertyName.indexOf('Time')}!=-1)
+          <el-table-column prop="$column.propertyName" label="$column.comment.split(' ')[0]" width="160" :formatter="rowFormatDate"/>
+        #elseif(${column.propertyName.indexOf('Img')}!=-1)
+          <el-table-column prop="$column.propertyName" label="$column.comment.split(' ')[0]" width="130">
+            <template slot-scope="scope">
+              <el-image :src="scope.row.$column.propertyName" style="width: 100px"/>
+            </template>
+          </el-table-column>
+        #elseif($column.propertyName.indexOf('Id')!=-1)
+          #set($item = $column.propertyName.split('Id')[0])
+          <el-table-column label="$column.comment.split(' ')[0]">
+            <template slot-scope="scope">{{scope.row.${item}.name}}</template>
+          </el-table-column>
+        #elseif($column.comment.indexOf(' ')!=-1 && $column.comment.indexOf('-')!=-1) ##代表有对应的常量值
+          <el-table-column label="$column.comment.split(' ')[0]">
+            <template slot-scope="scope">
+          #foreach ($item in $column.comment.split(' '))
+            #if($item.indexOf('-1-')!=-1)
+              <el-tag type="info" v-else-if="scope.row.$column.propertyName===-1">$item.split('-1-')[1]</el-tag>
+            #elseif($item.indexOf('1-')!=-1)
+              <el-tag v-if="scope.row.$column.propertyName===1">$item.split('1-')[1]</el-tag>
+            #elseif($item.indexOf('-')!=-1)
+              <el-tag type="success" v-else-if="scope.row.$column.propertyName===$item.split('-')[0]">$item.split('-')[1]</el-tag>
+            #end
+          #end
+            </template>
+          </el-table-column>
+        #elseif(!$column.pk)
+          <el-table-column prop="$column.propertyName" label="$column.comment.split(' ')[0]"/>
+        #end
+      #end
+      <el-table-column label="操作" width="80">
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="open(scope.row)">修改</el-button>
+          <el-button type="text" size="small" @click="del(scope.row.id)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+  <div class="pagination">
+    <el-pagination
+        @current-change="handleCurrentChange"
+        background
+        :current-page="page.page"
+        :page-size="page.pageSize"
+        layout="total, prev, pager, next"
+        :total="page.total">
+    </el-pagination>
+  </div>
+  <el-dialog :close-on-click-modal="false" title="$tableComment" :visible.sync="dialogVisible" width="60%">
+    <el-form ref="form" :model="form" label-width="160px">
+    #set($editIndex = -1)
+    #set($editTotal = $columns.size() - 1)
+    #foreach ($column in $columns)
+      #if($column.pk || $column.propertyName == 'createTime' || $column.propertyName == 'updateTime' || $column.propertyName == 'version')
+        #set($editTotal = $editTotal - 1)
+      #end
+    #end
+    #foreach ($column in $columns)
+    #if(!$column.pk && $column.propertyName != 'createTime' && $column.propertyName != 'updateTime' && $column.propertyName != 'version')
+    #set($editIndex = $editIndex + 1)##需要生成的组件的真实索引
+    #if($editIndex % 2 == 0)
+    <div class="form-item-inline-box">
+    #end
+      <el-form-item label="$column.comment.split(' ')[0]:">
+        #if($column.javaType.name == 'Date')
+          <el-date-picker
+              v-model="form.$column.propertyName"
+              type="datetime"
+              placeholder="请选择$column.comment.split(' ')[0]">
+          </el-date-picker>
+        #elseif($column.propertyName.indexOf('Time')!=-1)
+          <el-date-picker
+              v-model="form.$column.propertyName"
+              type="datetime"
+              value-format="timestamp"
+              placeholder="请选择$column.comment.split(' ')[0]">
+          </el-date-picker>
+        #elseif($column.propertyName.indexOf('Url')!=-1 || $column.propertyName.indexOf('url')!=-1 || $column.propertyName.indexOf('logo')!=-1)
+          <el-upload
+              drag
+              ref="uploader"
+              :action="Host+'/public/upload/on'"
+              :show-file-list="false"
+              :headers="header()"
+              :data="uploadParam"
+              :on-success="uploaded"
+          >
+            <el-image v-if="form.$column.propertyName" :src="form.$column.propertyName"/>
+            <div v-else>
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            </div>
+          </el-upload>
+        #elseif($column.fk) ##代表有外键
+          <el-select v-model="form.$column.propertyName" filterable placeholder="请选择$column.comment.split(' ')[0]">
+            <el-option
+              v-for="item in ${column.fkPropertyName}List"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        #elseif($column.comment.indexOf(' ')!=-1 && $column.comment.indexOf('-')!=-1) ##代表有对应的常量值
+          <el-radio-group v-model="form.$column.propertyName">
+          #foreach ($item in $column.comment.split(' '))
+            #if($item.indexOf('-1-')!=-1)
+              <el-radio-button :label="-1">$item.split('-1-')[1]</el-radio-button>
+            #elseif($item.indexOf('1-')!=-1)
+              <el-radio-button :label="1">$item.split('1-')[1]</el-radio-button>
+            #elseif($item.indexOf('-')!=-1)
+            <el-radio-button :label="$item.split('-')[0]">$item.split('-')[1]</el-radio-button>
+            #end
+          #end
+          </el-radio-group>
+        #elseif($column.dbType == 'text')
+          <el-input type="textarea" v-model="form.$column.propertyName" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+        #elseif($column.javaType.name == 'String')
+          <el-input v-model="form.$column.propertyName" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+        #elseif($column.javaType.name == 'Long' || $column.javaType.name ==
+            'Integer'||$column.javaType.name == 'BigDecimal')
+          <el-input v-model="form.$column.propertyName" type="number" placeholder="请输入$column.comment.split(' ')[0]" clearable/>
+        #end
+      </el-form-item>
+    #if($editIndex % 2 == 1 || $editIndex == $editTotal)
+    </div>
+    #end
+    #end
+    #end
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">保存</el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
+</div>
+</template>
+
+<script>
+#if($hasUploader)
+import {getSign, getSignByTimestamp} from '@/utils/EncryptionUtil';
+import SparkMD5 from 'spark-md5';
+import md5 from 'js-md5';
+import * as aes from '@/utils/aes.js';
+#end
+import * as api from '@/api/${classMapping}'
+#foreach ($column in $columns)##外键数据处理
+  #if($column.fk)
+  #set($upItem = $column.fkClassName + 'List')
+import {selectAll as select$upItem} from '@/api/$column.fkPropertyName'
+  #end
+#end
+export default {
+  components: {},
+  data() {
+    return {
+      form: {
+#foreach ($column in $columns)
+    #if(!$column.pk && $column.propertyName != 'createTime' && $column.propertyName != 'updateTime')
+        $column.propertyName: null,
+    #end
+#end
+      },
+      page: {
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        #foreach ($column in $columns)
+          #if(!$column.pk && $column.propertyName != 'createTime' && $column.propertyName != 'updateTime'&&
+            $column.propertyName.indexOf('Url')==-1 && $column.propertyName.indexOf('url')==-1 && $column.propertyName.indexOf('logo')==-1)
+              $column.propertyName: null,
+          #end
+        #end
+      },
+    #if($hasUploader)
+      uploadParam: {},
+      Host: Config.HttpHost,
+    #end
+      data: [],
+      dialogVisible: false,
+      api: api,
+#foreach ($column in $columns)##外键数据处理
+  #if($column.fk)
+      ${column.fkPropertyName}List:[],
+  #end
+#end
+    }
+  },
+  mounted() {
+    this.paging();
+#foreach ($column in $columns)##外键数据处理
+  #if($column.fk)
+    select${column.fkClassName}List({}).then(data=>{
+      this.${column.fkPropertyName}List = data;
+    })
+  #end
+#end
+  },
+  methods: {
+      #if($hasUploader)
+        header() {
+          let sign = getSign();
+          return {
+            "timestamp": sign.timestamp,
+            "v-token": localStorage.getItem("v-token"),
+            // "sign":md5(sign.sign+"fileName"+fileMd5)
+            "sign": sign.sign
+          }
+        },
+        uploaded(data) {
+          this.${message}.success("上传成功!");
+          this.form.$uploadPropertyName = data.url;
+          this.${forceUpdate}();
+        },
+      #end
+    del(id) {
+      this.$confirm("确定删除编号为[" + id + "]的数据吗?", '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        api.del({id: id}).then(() => {
+          this.$message.success("删除成功!");
+          this.paging();
+          this.closeDialog();
+        })
+      });
+    },
+    open(item) {
+      item = item instanceof PointerEvent ? null : item;
+      this.openDialog(item, () => {
+        if (!item) {
+          this.form = {
+        #foreach ($column in $columns)
+            #if(!$column.pk)
+              $column.propertyName: null,
+            #end
+        #end
+          }
+        }
+      });
+    },
+    paging: function () {
+      this.queryPage(data=>{});
+    },
+    query: function () {
+      this.page.page = 1;
+      this.paging();
+    },
+    reset: function () {
+      let page = {
+        page: 1,
+        pageSize: 10,
+        total: 0,
+  #foreach ($column in $columns)
+    #if(!$column.pk && $column.propertyName != 'createTime' && $column.propertyName != 'updateTime'&&
+      $column.propertyName.indexOf('Url')==-1 && $column.propertyName.indexOf('url')==-1 && $column.propertyName.indexOf('logo')==-1)
+        $column.propertyName: null,
+    #end
+  #end
+      }
+      this.page = {...page};
+      this.paging();
+    },
+    onSubmit() {
+      this.save();
+    },
+    handleCurrentChange(page) {
+      this.page.page = page;
+      this.paging();
+    }
+  }
+}
+</script>
+<style lang="scss">
+</style>

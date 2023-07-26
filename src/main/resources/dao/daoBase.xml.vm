@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="${packageName}.dao.base.${ClassName}BaseDAO">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="${idName}">
+        #if(!$autoIncrement && $idType=='String')
+        <selectKey keyProperty="${idName}" resultType="${idType}" order="BEFORE">
+            select uuid() as id;
+        </selectKey>
+        #end
+        #if($idType.name == 'String')
+        select uuid() as id;
+        #end
+        insert into `${tableName}`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+        #foreach ($column in $columns)
+        #if($column.pk && $column.javaType.name=='String')
+            `${idName}`,
+        #elseif(!$column.pk && $column.javaType.name=='String')
+            <if test="$column.propertyName != null and $column.propertyName != ''">`$column.name`,</if>
+        #elseif($column.propertyName == 'version')
+            `version`,
+        #elseif($column.propertyName == 'createTime' || $column.propertyName == 'create_time')
+            `$column.name`,
+        #elseif($column.propertyName == 'updateTime' || $column.propertyName == 'update_time')
+            `$column.name`,
+        #elseif(!$column.pk && $column.javaType.name!='String')
+            <if test="$column.propertyName != null">`$column.name`,</if>
+        #end
+        #end
+        </trim>
+        <trim prefix="VALUES (" suffix=");" suffixOverrides=",">
+        #foreach ($column in $columns)
+        #if($column.pk && $column.javaType.name=='String')
+            #{${idName}},
+        #elseif(!$column.pk && $column.javaType.name=='String')
+            <if test="$column.propertyName != null and $column.propertyName != ''">#{$column.propertyName},</if>
+        #elseif($column.propertyName == 'version')
+            0,
+        #elseif($column.propertyName == 'createTime' || $column.propertyName == 'create_time')
+            REPLACE(unix_timestamp(current_timestamp(3)),'.',''),
+        #elseif($column.propertyName == 'updateTime' || $column.propertyName == 'update_time')
+            REPLACE(unix_timestamp(current_timestamp(3)),'.',''),
+        #elseif(!$column.pk && $column.javaType.name!='String')
+            <if test="$column.propertyName != null">#{$column.propertyName},</if>
+        #end
+        #end
+        </trim>
+    </insert>
+
+    <update id="updateById">
+        update `${tableName}`
+        <set>
+            #foreach ($column in $columns)
+            #if(!$column.pk && $column.javaType.name=='String')
+           `$column.name` = #{$column.propertyName},
+            #elseif($column.propertyName == 'createTime')##如果是创建时间,在修改时 什么都不做
+            #elseif($column.propertyName == 'version')
+            `$column.name` = #{$column.propertyName}+1,
+            #elseif($column.propertyName == 'updateTime' || $column.propertyName == 'update_time')
+            `$column.name` = REPLACE(unix_timestamp(current_timestamp(3)),'.',''),
+            #elseif(!$column.pk && $column.javaType.name!='String')
+            `$column.name` = #{$column.propertyName},
+            #end
+            #end
+        </set>
+        where `${idName}` = #{${idName}}
+        #foreach ($column in $columns)
+        #if($column.propertyName == 'version')
+            and `$column.name` = #{$column.propertyName}
+        #end
+        #end
+    </update>
+
+    <delete id="deleteById">
+        delete from `${tableName}` where `${idName}` = #{${idName}}
+    </delete>
+</mapper>

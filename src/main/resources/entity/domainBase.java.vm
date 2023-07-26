@@ -1,0 +1,18 @@
+package ${packageName}.entity.base;
+
+#foreach ($import in $imports)
+${import}
+#end
+import java.io.Serializable;
+
+public class ${ClassName}Base implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+#foreach ($column in $columns)
+    private $column.javaType.name $column.propertyName;//$column.comment
+#end
+#foreach ($column in $columns)
+    public void ${column.setter}($column.javaType.name $column.propertyName){this.$column.propertyName = $column.propertyName;}
+    public $column.javaType.name ${column.getter}() {return $column.propertyName;}
+#end
+}

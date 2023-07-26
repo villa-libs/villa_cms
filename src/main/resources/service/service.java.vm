@@ -1,0 +1,93 @@
+package ${packageName}.service;
+
+import java.util.List;
+import com.villa.util.Util;
+import com.villa.util.ClassUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import ${packageName}.repository.${ClassName}Repository;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.dto.${ClassName}PageDTO;
+@Service
+public class ${ClassName}Service {
+    @Autowired
+    private ${ClassName}Repository ${classname}Repository;
+#if($hasFK)
+    #foreach ($column in $columns)##外键数据处理
+        #if($column.fk)
+    @Autowired
+    private ${column.fkClassName}Service ${column.fkPropertyName}Service;
+        #end
+    #end
+#end
+    public int insert(${ClassName} obj){
+#foreach ($column in $columns)
+    #if(!$column.pk && $column.required && $column.javaType.name=='String')
+        Util.assertionIsNotNullOrEmpty(obj.${column.getter}(),"${column.comment.split(' ')[0]}不能为空");
+    #end
+    #if(!$column.pk && $column.required && $column.javaType.name!='String' && $column.name != 'createTime'&& $column.name != 'updateTime' && $column.name != 'version')
+        Util.assertionIsNotNull(obj.${column.getter}(),"${column.comment.split(' ')[0]}不能为空");
+    #end
+#end
+        return ${classname}Repository.insert(obj);
+    }
+
+    public int updateById(${ClassName} obj){
+#foreach ($column in $columns)
+    #if($column.pk && $column.javaType.name=='String')
+        Util.assertionIsNotNullOrEmpty(obj.${column.getter}(),"非法访问");
+    #elseif($column.pk && $column.javaType.name!='String')
+        Util.assertionIsNotNull(obj.${column.getter}(),"非法访问");
+    #end
+#end
+        //obj-->desc数据覆盖 不是所有的都需要 请根据业务需要自己选择
+        ${ClassName} sys${ClassName} = selectOneById(obj.getId());
+        ClassUtil.copyProperty(obj,sys${ClassName},true);
+        return ${classname}Repository.updateById(sys${ClassName});
+    }
+
+    public int deleteById(${idType} ${idName}){
+       return ${classname}Repository.deleteById(id);
+   }
+
+    public ${ClassName} selectOneById(${idType} ${idName}){
+        return ${classname}Repository.selectOneById(id);
+    }
+    public ${ClassName} selectOne(${ClassName} obj){
+        return ${classname}Repository.selectOne(obj);
+    }
+
+    public List<${ClassName}> selectAll(${ClassName} obj){
+        List<${ClassName}> data = ${classname}Repository.selectAll(obj);
+    #if($hasFK)
+        data.stream().forEach(item->{
+            #foreach ($column in $columns)##外键数据处理
+                #if($column.fk)
+            item.set${column.fkClassName}(${column.fkPropertyName}Service.selectOneById(item.${column.getter}()));
+                #end
+            #end
+        });
+    #end
+        return data;
+    }
+
+    public ${ClassName}PageDTO paging(${ClassName}PageDTO dto){
+        long count = ${classname}Repository.selectCount(dto);
+        dto.setTotal(count);
+        if(count==0)return dto;
+    #if($hasFK)
+        List<${ClassName}> data = ${classname}Repository.selectPage(dto);
+        data.stream().forEach(item->{
+        #foreach ($column in $columns)##外键数据处理
+            #if($column.fk)
+            item.set${column.fkClassName}(${column.fkPropertyName}Service.selectOneById(item.${column.getter}()));
+            #end
+        #end
+        });
+        dto.setData(data);
+    #else
+        dto.setData(${classname}Repository.selectPage(dto));
+    #end
+        return dto;
+    }
+}

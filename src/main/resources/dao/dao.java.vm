@@ -1,0 +1,16 @@
+package ${packageName}.dao;
+
+import ${packageName}.dao.base.${ClassName}BaseDAO ;
+import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.dto.${ClassName}PageDTO;
+
+@Mapper
+public interface ${ClassName}DAO extends ${ClassName}BaseDAO{
+    ${ClassName} selectOneById(${idType} ${idName});
+    ${ClassName} selectOne(${ClassName} obj);
+    List<${ClassName}> selectAll(${ClassName} obj);
+    long selectCount(${ClassName}PageDTO dto);
+    List<${ClassName}> selectPage(${ClassName}PageDTO dto);
+}

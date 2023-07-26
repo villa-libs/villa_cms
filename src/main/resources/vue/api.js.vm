@@ -1,0 +1,37 @@
+import request from '@/utils/request.js'
+
+export function paging(data) {
+  return request({
+    url: '/back/${classMapping}/paging',
+    method: 'post',
+    data
+  })
+}
+export function selectAll(data) {
+  return request({
+    url: '/back/${classMapping}/selectAll',
+    method: 'post',
+    data
+  })
+}
+export function add(data) {
+  return request({
+    url: '/back/${classMapping}/add',
+    method: 'post',
+    data
+  })
+}
+export function edit(data) {
+  return request({
+    url: '/back/${classMapping}/edit',
+    method: 'post',
+    data
+  })
+}
+export function del(data) {
+  return request({
+    url: '/back/${classMapping}/delete',
+    method: 'post',
+    data
+  })
+}

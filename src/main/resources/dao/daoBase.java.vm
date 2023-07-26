@@ -1,0 +1,9 @@
+package ${packageName}.dao.base;
+
+import ${packageName}.entity.${ClassName};
+
+public interface ${ClassName}BaseDAO{
+    int insert(${ClassName} obj);
+    int updateById(${ClassName} obj);
+    int deleteById(${idType} id);
+}

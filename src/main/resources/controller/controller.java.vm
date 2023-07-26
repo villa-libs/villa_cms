@@ -1,0 +1,57 @@
+package ${packageName}.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+import ${packageName}.facade.${ClassName}Facade;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.dto.${ClassName}PageDTO;
+import ${resultPackage}.dto.${resultDTO};
+
+@Controller
+@RequestMapping("/back/${classMapping}")
+@CrossOrigin
+public class ${ClassName}Action{
+    @Autowired
+    private ${ClassName}Facade ${classname}Facade;
+
+    @RequestMapping("/add")
+    @ResponseBody
+    public ${resultDTO} add(@RequestBody ${ClassName} obj) {
+        return ${classname}Facade.insert(obj);
+    }
+
+    @RequestMapping("/edit")
+    @ResponseBody
+    public ${resultDTO} edit(@RequestBody ${ClassName} obj) {
+        return ${classname}Facade.updateById(obj);
+    }
+
+    @RequestMapping("/delete")
+    @ResponseBody
+    public ${resultDTO} delete(@RequestBody ${ClassName} obj) {
+        return ${classname}Facade.deleteById(obj.${idGetter}());
+    }
+
+    @RequestMapping("/selectOne")
+    @ResponseBody
+    public ${resultDTO} selectOne(@RequestBody ${ClassName} obj) {
+        return ${classname}Facade.selectOne(obj);
+    }
+
+    @RequestMapping("/selectAll")
+    @ResponseBody
+    public ${resultDTO} selectAll(@RequestBody ${ClassName} obj) {
+        return ${classname}Facade.selectAll(obj);
+    }
+
+    @RequestMapping("/paging")
+    @ResponseBody
+    public ${resultDTO} paging(@RequestBody ${ClassName}PageDTO dto) {
+        return ${classname}Facade.paging(dto);
+    }
+
+}

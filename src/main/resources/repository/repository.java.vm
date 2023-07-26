@@ -1,0 +1,51 @@
+package ${packageName}.repository;
+
+import com.villa.sql.SqlUtil;
+import java.util.List;
+import com.villa.util.Util;
+#foreach ($column in $columns)
+    #if($column.name == 'version')
+    import com.villa.util.ClassUtil;
+    #end
+#end
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Component;
+import ${packageName}.dao.${ClassName}DAO;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.dto.${ClassName}PageDTO;
+
+@Component
+public class ${ClassName}Repository {
+    @Autowired
+    private ${ClassName}DAO ${classname}DAO;
+    @Transactional
+    public int insert(${ClassName} obj){ return SqlUtil.dmlSql(()->${classname}DAO.insert(obj)); }
+    @Transactional
+    public int updateById(${ClassName} obj){
+#if($hasLock)
+        //当前表有version乐观锁机制 需要自己处理
+#end
+        return SqlUtil.dmlSql(()->${classname}DAO.updateById(obj));
+    }
+    @Transactional
+    public int deleteById(${idType} ${idName}){
+       return SqlUtil.dmlSql(()->${classname}DAO.deleteById(id));
+   }
+
+    public ${ClassName} selectOneById(${idType} ${idName}){
+        return SqlUtil.dqlSqlGetOne(()->${classname}DAO.selectOneById(id));
+    }
+    public ${ClassName} selectOne(${ClassName} obj){
+        return SqlUtil.dqlSqlGetOne(()->${classname}DAO.selectOne(obj));
+    }
+    public List<${ClassName}> selectAll(${ClassName} obj){
+        return SqlUtil.dqlSqlGetList(()->${classname}DAO.selectAll(obj));
+    }
+    public long selectCount(${ClassName}PageDTO dto){
+        return SqlUtil.dqlSqlGetOne(()->${classname}DAO.selectCount(dto));
+    }
+    public List<${ClassName}> selectPage(${ClassName}PageDTO dto){
+        return SqlUtil.dqlSqlGetList(()->${classname}DAO.selectPage(dto));
+    }
+}

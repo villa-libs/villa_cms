@@ -1,0 +1,21 @@
+package ${packageName}.entity;
+
+import ${packageName}.entity.base.${ClassName}Base;
+public class ${ClassName} extends ${ClassName}Base {
+    private static final long serialVersionUID = 1L;
+#if($hasFK)
+    #foreach ($column in $columns)##外键数据处理
+        #if($column.fk)
+    private ${column.fkClassName} ${column.fkPropertyName};
+        #end
+    #end
+#end
+#if($hasFK)
+#foreach ($column in $columns)##外键数据处理
+    #if($column.fk)
+    public void ${column.fkSetter}($column.fkClassName $column.fkPropertyName){this.$column.fkPropertyName = $column.fkPropertyName;}
+    public $column.fkClassName ${column.fkGetter}() {return $column.fkPropertyName;}
+    #end
+#end
+#end
+}

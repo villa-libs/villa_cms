@@ -1,0 +1,20 @@
+package ${packageName}.dto;
+#foreach ($import in $imports)
+    ${import};
+#end
+import ${packageName}.entity.${ClassName};
+import com.villa.dto.PageDTO;
+public class ${ClassName}PageDTO extends PageDTO<${ClassName}> {
+    private static final long serialVersionUID = 1L;
+    #foreach ($column in $columns)
+    #if(!$column.pk)
+    private $column.javaType.name $column.propertyName;//$column.comment
+    #end
+    #end
+    #foreach ($column in $columns)
+    #if(!$column.pk)
+    public void ${column.setter}($column.javaType.name $column.propertyName){this.$column.propertyName = $column.propertyName;}
+    public $column.javaType.name ${column.getter}() {return $column.propertyName;}
+    #end
+    #end
+}
