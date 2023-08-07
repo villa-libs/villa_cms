@@ -146,11 +146,9 @@
           <el-upload
               drag
               ref="uploader"
-              :action="Host+'/public/upload/on'"
+              action
               :show-file-list="false"
-              :headers="header()"
-              :data="uploadParam"
-              :on-success="uploaded"
+              :http-request="upload"
           >
             <el-image v-if="form.$column.propertyName" :src="form.$column.propertyName"/>
             <div v-else>
@@ -203,12 +201,6 @@
 </template>
 
 <script>
-#if($hasUploader)
-import {getSign, getSignByTimestamp} from '@/utils/EncryptionUtil';
-import SparkMD5 from 'spark-md5';
-import md5 from 'js-md5';
-import * as aes from '@/utils/aes.js';
-#end
 import * as api from '@/api/${classMapping}'
 #foreach ($column in $columns)##外键数据处理
   #if($column.fk)
@@ -238,10 +230,6 @@ export default {
           #end
         #end
       },
-    #if($hasUploader)
-      uploadParam: {},
-      Host: Config.HttpHost,
-    #end
       data: [],
       dialogVisible: false,
       api: api,
@@ -263,22 +251,13 @@ export default {
 #end
   },
   methods: {
-      #if($hasUploader)
-        header() {
-          let sign = getSign();
-          return {
-            "timestamp": sign.timestamp,
-            "v-token": localStorage.getItem("v-token"),
-            // "sign":md5(sign.sign+"fileName"+fileMd5)
-            "sign": sign.sign
-          }
-        },
-        uploaded(data) {
-          this.${message}.success("上传成功!");
-          this.form.$uploadPropertyName = data.url;
-          this.${forceUpdate}();
-        },
-      #end
+  #if($hasUploader)
+    upload(item){
+      this.uploadFile(item,data=>{
+        this.form.$uploadPropertyName = data.url;
+      })
+    },
+  #end
     del(id) {
       this.$confirm("确定删除编号为[" + id + "]的数据吗?", '提示', {
         confirmButtonText: '确定',
